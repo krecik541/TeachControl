@@ -1,0 +1,10 @@
+﻿  main.cpp
+  windows.cpp
+C:\Users\macie\Desktop\Programowanie\projekty\skrypt admin-client\client\windows\windows.cpp(233,34): warning C4334: "<<": wynik 32-bitowe przesunięcia niejawnie skonwertowano do 64 bitów (czy 64-bitowe przesunięcie było zamierzone?)
+C:\Users\macie\Desktop\Programowanie\projekty\skrypt admin-client\client\windows\windows.cpp(353,20): warning C5056: operator „==”: przestarzały w przypadku typów tablicowych
+C:\Users\macie\Desktop\Programowanie\projekty\skrypt admin-client\client\windows\windows.cpp(360,25): warning C5056: operator „==”: przestarzały w przypadku typów tablicowych
+C:\Users\macie\Desktop\Programowanie\projekty\skrypt admin-client\client\windows\windows.cpp(364,25): warning C5056: operator „==”: przestarzały w przypadku typów tablicowych
+C:\Users\macie\Desktop\Programowanie\projekty\skrypt admin-client\client\windows\windows.cpp(404,45): warning C4244: "argument": konwersja z "std::streamsize" do "int", możliwa utrata danych
+C:\Users\macie\Desktop\Programowanie\projekty\skrypt admin-client\client\windows\windows.cpp(345,10): warning C4101: "clientIdBuffer": lokalna zmienna, do której nie istnieje odwołanie
+  Generowanie kodu...
+  client.vcxproj -> C:\Users\macie\Desktop\Programowanie\projekty\skrypt admin-client\client\x64\Debug\client.exe
