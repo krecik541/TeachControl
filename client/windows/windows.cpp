@@ -349,7 +349,9 @@ void windows(SOCKET clientSocket)
     while (true)
     {
         char buffer[256];
-        recv(clientSocket, buffer, sizeof(buffer), 0);
+        int l = recv(clientSocket, buffer, sizeof(buffer), 0);
+        buffer[l] = '\0';
+        std::cout << buffer << std::endl;
         if (buffer == "messageBox")
         {
             recv(clientSocket, buffer, sizeof(buffer), 0);
@@ -360,17 +362,14 @@ void windows(SOCKET clientSocket)
         else if (buffer == "block")
         {
             fl = true;
+            ShowWindow(hwnd, SW_SHOW);
+            UpdateWindow(hwnd);
         }
         else if (buffer == "unblock")
         {
             ShowWindow(hwnd, SW_HIDE);
             UpdateWindow(hwnd);
             fl = false;
-        }
-
-        if (fl) {
-            ShowWindow(hwnd, SW_SHOW);
-            UpdateWindow(hwnd);
         }
 
         LPTSTR lptstr = (LPTSTR)L"screenshot.bmp";
@@ -398,14 +397,14 @@ void windows(SOCKET clientSocket)
 
         while (file.read(buff, BUFFER)) { 
             send(clientSocket, buff, BUFFER, NULL);
-            std::cout << ++i << std::endl;
+            //std::cout << ++i << std::endl;
         }
 
         send(clientSocket, buff, file.gcount(), 0);
 
         file.close();
 
-        Sleep(500);
+        Sleep(1000);
     } 
 
     closesocket(clientSocket);

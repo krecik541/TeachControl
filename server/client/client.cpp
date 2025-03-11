@@ -20,12 +20,6 @@ Client::Client(std::string IP, std::string name) : IP(IP), name(name)
 void Client::clientHandler(SOCKET clientSocket)
 {
     char clientID[256];
-    //send(clientSocket, message.c_str(), message.size() + 1, 0);
-    //
-    // TUTAJ DODAJ ZMIANE NAZWY NA BAZIE DANYCH
-    //
-    //recv(clientSocket, clientID, sizeof(clientID), 0);
-    //name = clientID;
     
     while (true) {
         
@@ -38,11 +32,13 @@ void Client::clientHandler(SOCKET clientSocket)
         }
         else if (status == "block")
         {
+            this->bl = true;
             std::string message = "block";
             send(clientSocket, message.c_str(), message.size() + 1, 0);
         }
         else if (status == "unblock")
         {
+            this->bl = false;
             std::string message = "unblock";
             send(clientSocket, message.c_str(), message.size() + 1, 0);
         }
@@ -51,30 +47,38 @@ void Client::clientHandler(SOCKET clientSocket)
             std::string message = "None";
             send(clientSocket, message.c_str(), message.size() + 1, 0);
         }
+
+        this->ver = !this->ver;
         
         std::fstream file;
-        file.open("Resources\\Screenshot\\screenshot_" + this->name + ".bmp", std::ios::binary | std::ios::out);
+        file.open("Resources\\Screenshot\\screenshot" + this->name + (this->ver ? "_A" : "_B") + ".bmp", std::ios::binary | std::ios::out);
+
 
         if (!file.good()) {
-            std::cerr << "Could not open file: " << "Rescources/Screenshot/screenshot_" + this->name << std::endl;
+            std::cerr << "Could not open file: " << "Rescources/Screenshot/screenshot" + this->name << std::endl;
             this->mtx.unlock();
             return;
         }
 
         char buffer[BUFFER];
-        std::cout << recv(clientSocket, buffer, BUFFER, NULL) << std::endl;
+        //std::cout << recv(clientSocket, buffer, BUFFER, NULL) << std::endl;
+        recv(clientSocket, buffer, BUFFER, NULL);
         std::string s = buffer;
         int counter, i = 0, bits = std::stoi(s);
         while (bits > 0 && (counter = recv(clientSocket, buffer, BUFFER, NULL)) > 0) {
-            //std::cout << buffer << std::endl;
             file.write(buffer, counter);
             bits -= counter;
             std::cout << ++i << std::endl;
         }
+
+        this->active = true;
         
         file.close();
 
         this->mtx.unlock();
+
+        InvalidateRect(hwnd, NULL, FALSE);
+        UpdateWindow(hwnd); // Natychmiastowe wywo³anie WM_PAINT
     }
 
     closesocket(clientSocket);
@@ -123,4 +127,34 @@ void Client::setTitle(std::string title)
 std::string Client::getTitle()
 {
     return this->title;
+}
+
+void Client::setThread(std::thread* t)
+{
+    this->t = t;
+}
+
+std::thread* Client::getThread()
+{
+    return this->t;
+}
+
+void Client::setActive()
+{
+    this->active = false;
+}
+
+bool Client::getActive()
+{
+    return active;
+}
+
+void Client::setNr(int nr)
+{
+    this->nr = nr;
+}
+
+int Client::getNr()
+{
+    return nr;
 }
