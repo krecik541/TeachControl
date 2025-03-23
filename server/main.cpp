@@ -248,9 +248,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             WS_CHILD | WS_VISIBLE, rect.right - 96, rect.bottom - 20, 96, 20,
             hwnd, (HMENU)(client->nr * 2 + 1), GetModuleHandle(NULL), NULL);
 
-        rect.bottom = rect.top + 15;
+        rect.top = rect.top + 25;
         std::wstring name = converter.from_bytes(client->name);
-        DrawText(GetWindowDC(hwnd), name.c_str(), -1, &rect, DT_CENTER);
+        DrawText(GetWindowDC(hwnd), name.c_str(), -1, &rect, DT_RIGHT);
+        
 
         break;
     }

@@ -351,21 +351,22 @@ void windows(SOCKET clientSocket)
         char buffer[256];
         int l = recv(clientSocket, buffer, sizeof(buffer), 0);
         buffer[l] = '\0';
-        std::cout << buffer << std::endl;
-        if (buffer == "messageBox")
+        std::string sx = buffer;
+        std::cout << (buffer == "block\0") << std::endl;
+        if (sx == "messageBox")
         {
             recv(clientSocket, buffer, sizeof(buffer), 0);
             char message[512];
-            recv(clientSocket, buffer, sizeof(message), 0);
+            recv(clientSocket, message, sizeof(message), 0);
             MessageBoxA(NULL, message, buffer, NULL);
         }
-        else if (buffer == "block")
+        else if (sx == "block")
         {
             fl = true;
             ShowWindow(hwnd, SW_SHOW);
             UpdateWindow(hwnd);
         }
-        else if (buffer == "unblock")
+        else if (sx == "unblock")
         {
             ShowWindow(hwnd, SW_HIDE);
             UpdateWindow(hwnd);
