@@ -4,6 +4,9 @@
 #include <vector>
 
 #include "client.h"
+#include "../GUI/Button.h"
+
+HWND Client::hwnd = nullptr;
 
 Client::Client()
 {
@@ -21,67 +24,76 @@ void Client::clientHandler(SOCKET clientSocket)
 {
     char clientID[256];
     
-    while (true) {
-        
-        this->mtx.lock();
-        if (status == "messageBox")
-        {
-            send(clientSocket, this->status.c_str(), this->status.size() + 1, 0);
-            send(clientSocket, this->title.c_str(), this->title.size() + 1, 0);
-            send(clientSocket, this->message.c_str(), this->message.size() + 1, 0);
-        }
-        else if (status == "block")
-        {
-            this->bl = true;
-            std::string message = "block";
-            send(clientSocket, message.c_str(), message.size() + 1, 0);
-        }
-        else if (status == "unblock")
-        {
-            this->bl = false;
-            std::string message = "unblock";
-            send(clientSocket, message.c_str(), message.size() + 1, 0);
-        }
-        else
-        {
-            std::string message = "None";
-            send(clientSocket, message.c_str(), message.size() + 1, 0);
-        }
+    try
+    {
+        while (true) {
 
-        this->ver = !this->ver;
-        
-        std::fstream file;
-        file.open("Resources\\Screenshot\\screenshot" + this->name + (this->ver ? "_A" : "_B") + ".bmp", std::ios::binary | std::ios::out);
+            this->mtx.lock();
+            if (status == "messageBox")
+            {
+                send(clientSocket, this->status.c_str(), this->status.size() + 1, 0);
+                send(clientSocket, this->title.c_str(), this->title.size() + 1, 0);
+                send(clientSocket, this->message.c_str(), this->message.size() + 1, 0);
+            }
+            else if (status == "block")
+            {
+                this->blocked = true;
+                std::string message = "block";
+                send(clientSocket, message.c_str(), message.size() + 1, 0);
+            }
+            else if (status == "unblock")
+            {
+                this->blocked = false;
+                std::string message = "unblock";
+                send(clientSocket, message.c_str(), message.size() + 1, 0);
+            }
+            else
+            {
+                std::string message = "None";
+                send(clientSocket, message.c_str(), message.size() + 1, 0);
+            }
+
+            this->imgVersion = !this->imgVersion;
+
+            std::fstream file;
+            file.open("Resources\\Screenshot\\screenshot" + this->name + (this->imgVersion ? "_A" : "_B") + ".bmp", std::ios::binary | std::ios::out);
 
 
-        if (!file.good()) {
-            std::cerr << "Could not open file: " << "Rescources/Screenshot/screenshot" + this->name << std::endl;
+            if (!file.good()) {
+                std::cerr << "Could not open file: " << "Rescources/Screenshot/screenshot" + this->name << std::endl;
+                this->mtx.unlock();
+                return;
+            }
+
+            char buffer[BUFFER];
+            //std::cout << recv(clientSocket, buffer, BUFFER, NULL) << std::endl;
+            recv(clientSocket, buffer, BUFFER, NULL);
+            std::string s = buffer;
+            int counter, i = 0, bits = std::stoi(s);
+            while (bits > 0 && (counter = recv(clientSocket, buffer, BUFFER, NULL)) > 0) {
+                file.write(buffer, counter);
+                bits -= counter;
+                std::cout << ++i << std::endl;
+            }
+
+            this->active = true;
+
+            file.close();
+
             this->mtx.unlock();
-            return;
+
+            InvalidateRect(hwnd, NULL, FALSE);
+            UpdateWindow(hwnd); // Natychmiastowe wywo³anie WM_PAINT
         }
 
-        char buffer[BUFFER];
-        //std::cout << recv(clientSocket, buffer, BUFFER, NULL) << std::endl;
-        recv(clientSocket, buffer, BUFFER, NULL);
-        std::string s = buffer;
-        int counter, i = 0, bits = std::stoi(s);
-        while (bits > 0 && (counter = recv(clientSocket, buffer, BUFFER, NULL)) > 0) {
-            file.write(buffer, counter);
-            bits -= counter;
-            std::cout << ++i << std::endl;
-        }
-
-        this->active = true;
-        
-        file.close();
-
-        this->mtx.unlock();
-
-        InvalidateRect(hwnd, NULL, FALSE);
-        UpdateWindow(hwnd); // Natychmiastowe wywo³anie WM_PAINT
+        closesocket(clientSocket);
     }
+    catch (...)
+    {
+        PostMessage(hwnd, WM_USER + 2, 0, (LPARAM)this);
 
-    closesocket(clientSocket);
+        closesocket(clientSocket);
+    }
 }
 
 std::string Client::getIP()
@@ -158,3 +170,14 @@ int Client::getNr()
 {
     return nr;
 }
+
+Button Client::getButton()
+{
+    return this->button;
+}
+
+Button Client::getSendButton()
+{
+    return this->sendButton;
+}
+

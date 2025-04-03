@@ -2,43 +2,39 @@
 #include <string>
 #include <mutex>
 #include <Windows.h>
+#include "../GUI/Button.h"
 
 #define BUFFER 16384
 
-extern HWND hwnd;
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+class Button; 
 
 class Client {
 private:
 	const std::string IP;
+
 	std::string name;
 
 	std::string status;
 	std::string message;
 	std::string title;
-	bool bl = false;
+	bool blocked = false;
 
-	bool ver = false;
+	bool imgVersion = false;
 
 	std::thread* t = nullptr;
 	std::mutex mtx;
 
 	RECT rect;
-	HWND button;
-	HWND sendButton;
+	Button button;
+	Button sendButton;
 	HBITMAP img;
 
-	int nr;
-
-	static int sizeX;
-	static int sizeY;
-	int posX;
-	int posY;
+	int nr = -1;
 
 	bool active;
 
 public:
+	static HWND hwnd;
 
 	Client();
 	Client(std::string IP);
@@ -61,6 +57,8 @@ public:
 	bool getActive();
 	void setNr(int nr);
 	int getNr();
+	Button getButton();
+	Button getSendButton();
 
 	friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

@@ -1,7 +1,8 @@
-#include <iostream>
+Ôªø#include <iostream>
 #include <cstring>
 #include <codecvt>
 #include <sstream>
+#include <string>
 #include <cstdlib>
 #include <cstdio>
 #include <thread>
@@ -23,33 +24,146 @@
 
 
 #include "client/client.h"
+#include "GUI/Button.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
 #define IP_ADDR "127.0.0.1"
 #define PORT 8888
 
-#define LEFT client->rect.left
-#define TOP client->rect.top
-#define RIGHT client->rect.right
-#define BOTTOM client->rect.bottom
-
 #define WM_NEW_CLIENT (WM_USER + 1)
+#define WM_DEL_CLIENT (WM_USER + 2)
 
-HWND button, sendMessage, hwnd;
+HWND hwnd, sendHWND;
 
 bool g_running = true;
 
 std::map<int, Client*> clients;
 
+Client* cl;
+
 int counter = 0;
 
 //61
-//bazwa uøytkownika
+//bazwa u≈ºytkownika
+
+
+
+void server(HWND hwnd);
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+    WNDCLASS wc = {};
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = L"Window";
+    wc.style = 0;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.lpszMenuName = NULL;
+    //wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+
+    RegisterClass(&wc);
+
+    hwnd = CreateWindowEx(
+        WS_EX_WINDOWEDGE,
+        wc.lpszClassName,
+        L"Kontrola sali",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, 958, 820,
+        NULL, NULL, wc.hInstance, NULL);
+
+    if (!hwnd) {
+        return 0;
+    }
+
+    ShowWindow(hwnd, nCmdShow);
+    UpdateWindow(hwnd);
+
+    WNDCLASS sendClass = {};
+    sendClass.lpfnWndProc = WindowProc;
+    sendClass.hInstance = hInstance;
+    sendClass.lpszClassName = L"Window";
+    sendClass.style = 0;
+    sendClass.cbClsExtra = 0;
+    sendClass.cbWndExtra = 0;
+    sendClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    sendClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    sendClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    sendClass.lpszMenuName = NULL;
+    //wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+
+    RegisterClass(&sendClass);
+
+    sendHWND = CreateWindowEx(
+        WS_EX_WINDOWEDGE,
+        sendClass.lpszClassName,
+        L"Kontrola sali",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, 250, 400,
+        hwnd, NULL, sendClass.hInstance, NULL);
+
+    if (!sendHWND) {
+        return 0;
+    }
+
+    RECT rect = {};
+    rect.left = 15;
+    rect.top = 30;
+    rect.right = 235;
+    rect.bottom = 370;
+
+
+    HWND hTitle = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_BORDER |
+        WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, rect.left, rect.top, 205, 30, sendHWND, NULL, hInstance, NULL);
+    
+    HWND hMessage = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_BORDER |
+        WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, rect.left, rect.top + 60, 205, 150, sendHWND, NULL, hInstance, NULL);
+    
+    //HWND hMessage = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_BORDER |
+        //WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, rect.left, rect.top + 60, 205, 150, sendHWND, NULL, hInstance, NULL);
+    
+    HWND hCancelButton = CreateWindowEx(0, L"BUTTON", L"ANULUJ",
+        WS_CHILD | WS_VISIBLE, rect.left, rect.bottom - 60, 60, 30,
+        sendHWND, (HMENU)(0), GetModuleHandle(NULL), NULL);
+    
+    HWND hSendButton = CreateWindowEx(0, L"BUTTON", L"WYSLIJ",
+        WS_CHILD | WS_VISIBLE, rect.right - 60 - 20, rect.bottom - 60, 60, 30,
+        sendHWND, (HMENU)(65535), GetModuleHandle(NULL), NULL);
+    
+    Button::hwndW = hwnd;
+    Button::sendHWND = sendHWND;
+    Button::title = hTitle;
+    Button::message = hMessage;
+    Client::hwnd = hwnd;
+
+    ShowWindow(sendHWND, SW_SHOW);
+    UpdateWindow(sendHWND);
+
+
+
+    std::thread serverThread(server, hwnd);
+
+    MSG msg = {};
+
+    while (GetMessage(&msg, NULL, 0, 0) && g_running) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    g_running = false;
+    serverThread.join();
+
+    return 0;
+}
 
 void server(HWND hwnd) {
     MSG msg = {};
-    std::mutex mtx;
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         throw std::runtime_error("WSAStartup failed.\n");
@@ -84,16 +198,24 @@ void server(HWND hwnd) {
 
         char client_ip[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
-        //std::cout << "Po≥πczony klient: " << client_ip << ":" << ntohs(client_addr.sin_port) << std::endl;
+        //std::cout << "Po≈ÇƒÖczony klient: " << client_ip << ":" << ntohs(client_addr.sin_port) << std::endl;
 
         Client* client = new Client(client_ip);
-        client->setName("stanowisko" + std::to_string(counter));
+        for(int i = 0; i < clients.size(); i++)
+            if(!clients[i])
+            {
+                client->setNr(i);
+                break;
+            }
+        client->setName("stanowisko" + std::to_string(counter));// ? getName from file
         client->setThread(new std::thread(&Client::clientHandler, client, clientSocket));
-        client->setNr(counter);
+
+        if (client->getNr() == -1)
+            client->setNr(counter++);
+
+        clients.insert({ client->getNr(), client});
 
         PostMessage(hwnd, WM_USER + 1, 0, (LPARAM)client);
-
-        clients.insert({ counter++, client });
     }
 
     closesocket(serverSocket);
@@ -123,90 +245,96 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     {
     case WM_COMMAND:
     {
-
-        switch (wParam % 2)
+        if (wParam == 0)
+            ShowWindow(sendHWND, SW_HIDE);
+        else if (wParam == 65535)
         {
-        case 0:
+            wchar_t buffer[256];
+            GetWindowText(Button::title, buffer, sizeof(buffer));
+            std::wstring s(buffer);
+            cl->title = converter.to_bytes(s);
+            GetWindowText(Button::message, buffer, sizeof(buffer));
+            s = buffer;
+            cl->message = converter.to_bytes(s);
+            cl->status = "messageBox";
+        }
+        else if (wParam > clients.size() * 10)
+            break;
+        else
         {
             client = clients[wParam / 2];
-
-            HWND button = (HWND)lParam;
-
-            wchar_t buffer[256];
-            GetWindowText(button, buffer, sizeof(buffer));
-            std::wstring s(buffer);
-            if (s == L"ODBLOKUJ")
-            {
-                SetWindowText(button, L"ZABLOKUJ");
-                client->setStatus("unblock");
-            }
+            if (wParam % 2 == 0)
+                client->getButton().changeText();
             else
             {
-                SetWindowText(button, L"ODBLOKUJ");
-                client->setStatus("block");
+                client->getSendButton().send();
+                cl = client;
             }
-            break;
-        }
-        case 1:
-        {
-            break;
-            // TWORZENIE OKNA DO SEND
-        }
         }
         break;
     }
     case WM_PAINT:
     {
-        try 
+        RECT rectW;
+        GetWindowRect(hwnd, &rectW);
+        try
         {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(sendHWND, &ps); // Pobranie HDC dla obszaru rysowania
+
+            RECT r = { 15, 10, 235, 30 };
+            SetTextColor(hdc, RGB(0, 0, 0)); // Czerwony tekst
+            SetBkMode(hdc, TRANSPARENT); // Przezroczyste t≈Ço
+            DrawText(hdc, L"Tytul wiadomosci", -1, &r, DT_CENTER);
+            r = {15, 70, 235, 90};
+            DrawText(hdc, L"Tresc wiadomosci", -1, &r, DT_CENTER);
+            EndPaint(sendHWND, &ps); // Zako≈Ñczenie rysowania
+
+
             for (auto& cl : clients) {
                 Client* client = cl.second;
-                
+
                 if (!client->getActive())
                     continue;
-                
-                client->setActive(); 
 
-                //FillRect(GetDC(hwnd), &client->rect, (HBRUSH)CreateSolidBrush(0x00AA2DDA
+                client->setActive();
 
-                std::wstring narrow = converter.from_bytes("Resources\\Screenshot\\screenshot" + client->name + (client->ver ? "_A" : "_B") + ".bmp");
+                std::wstring narrow = converter.from_bytes("Resources\\Screenshot\\screenshot" + client->name + (client->imgVersion ? "_A" : "_B") + ".bmp");
 
-                // Za≥aduj obraz
+                // Za≈Çaduj obraz
                 HBITMAP hBitmap = (HBITMAP)LoadImage(NULL, narrow.c_str(), IMAGE_BITMAP, 192, 108, LR_LOADFROMFILE);
                 if (!hBitmap) {
-                    MessageBox(hwnd, L"Nie moøna za≥adowaÊ obrazu!", L"B≥πd", MB_ICONERROR);
-                    return -1;
+                    break;
+                    //throw std::runtime_error("Nie mo≈ºna za≈Çadowaƒá obrazu!\n");;
                 }
 
                 PAINTSTRUCT ps;
                 HDC hdc = BeginPaint(hwnd, &ps);
                 HDC hdcMem = CreateCompatibleDC(hdc);
                 if (!hdcMem) {
-                    MessageBox(hwnd, L"CreateCompatibleDC zwrÛci≥o NULL!", L"B≥πd", MB_ICONERROR);
                     DeleteObject(hBitmap);
-                    return -1;
+                    break;
+                    //throw std::runtime_error("CreateCompatibleDC zwr√≥ci≈Ço NULL!\n");;
                 }
 
                 HGDIOBJ oldBitmap = SelectObject(hdcMem, hBitmap);
                 if (!oldBitmap) {
-                    MessageBox(hwnd, L"SelectObject zwrÛci≥o NULL!", L"B≥πd", MB_ICONERROR);
                     DeleteDC(hdcMem);
                     DeleteObject(hBitmap);
-                    return -1;
+                    break;
+                    //throw std::runtime_error("SelectObject zwr√≥ci≈Ço NULL!\n");;
                 }
 
                 // Pobranie informacji o bitmapie
                 BITMAP bitmap;
                 if (!GetObject(hBitmap, sizeof(bitmap), &bitmap)) {
-                    MessageBox(hwnd, L"GetObject nie zwrÛci≥ poprawnych danych!", L"B≥πd", MB_ICONERROR);
                     SelectObject(hdcMem, oldBitmap);
                     DeleteDC(hdcMem);
                     DeleteObject(hBitmap);
-                    return -1;
+                    break;
+                    //throw std::runtime_error("GetObject nie zwr√≥ci≈Ç poprawnych danych!\n");;
                 }
 
-                RECT rectW;
-                GetWindowRect(hwnd, &rectW);
                 RECT rect = { 35 + (clients.size() - 1) % 4 * (192 + (rectW.right - rectW.left - 838) / 3), 30 + (clients.size() - 1) / 4 * (143 + (rectW.bottom - rectW.top - 780) / 4), 0, 0 };
                 rect.right = rect.left + 192;
                 rect.bottom = rect.top + 143;
@@ -214,7 +342,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 // Rysowanie obrazu
                 BitBlt(hdc, rect.left, rect.top + 15, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
 
-                // Zwolnienie zasobÛw
+                rect.top = rect.top + 25;
+                std::wstring name = converter.from_bytes(client->name);
+                DrawText(GetWindowDC(hwnd), name.c_str(), -1, &rect, DT_RIGHT);
+
+                // Zwolnienie zasob√≥w
                 SelectObject(hdcMem, oldBitmap);
                 DeleteDC(hdcMem);
                 DeleteObject(hBitmap);
@@ -223,10 +355,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
         catch (...)
         {
-
+            //MessageBox(hwnd, L"SelectObject zwr√≥ci≈Ço NULL!", L"B≈ÇƒÖd", MB_ICONERROR);
         }
         break;
     }
+    case WM_SIZE:
+        RECT rectW;
+        GetWindowRect(hwnd, &rectW);
+        rectW.right -= rectW.left;
+        rectW.bottom -= rectW.top;
+        rectW.left = 0;
+        rectW.top = 0;
+        FillRect(GetDC(hwnd), &rectW, (HBRUSH)CreateSolidBrush(0x00B4B4B4));
+        for (std::map<int, Client*>::iterator it = clients.begin(); it != clients.end(); it++)
+            it->second->active = true;
+        break;
     case WM_DESTROY:
         g_running = false;
         PostQuitMessage(0);
@@ -239,74 +382,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         rect.right = rect.left + 192;
         rect.bottom = rect.top + 143;
 
-
-        client->button = CreateWindowEx(0, L"BUTTON", client->bl ? L"ODBLOKUJ" : L"ZABLOKUJ",
-            WS_CHILD | WS_VISIBLE, rect.left, rect.bottom - 20, 96, 20,
-            hwnd, (HMENU)(client->nr * 2), GetModuleHandle(NULL), NULL);
-
-        client->sendButton = CreateWindowEx(0, L"BUTTON", L"WYåLIJ",
-            WS_CHILD | WS_VISIBLE, rect.right - 96, rect.bottom - 20, 96, 20,
-            hwnd, (HMENU)(client->nr * 2 + 1), GetModuleHandle(NULL), NULL);
+        client->button.create(client->blocked ? L"ODBLOKUJ" : L"ZABLOKUJ", rect.left, rect.bottom - 20, client->nr * 2, client);
+        client->sendButton.create(L"WY≈öLIJ", rect.right - 96, rect.bottom - 20, client->nr * 2 + 1, client);
 
         rect.top = rect.top + 25;
         std::wstring name = converter.from_bytes(client->name);
         DrawText(GetWindowDC(hwnd), name.c_str(), -1, &rect, DT_RIGHT);
-        
 
         break;
     }
-    case WM_TIMER:
-
+    case WM_DEL_CLIENT:
+    {
+        client->getThread()->join();
+        clients.erase(clients.find(client->nr));
+        delete client;
         break;
+    }
     default:
         break;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
-}
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = hInstance;
-    wc.lpszClassName = L"Window";
-    wc.style = 0;
-    wc.cbClsExtra = 0;
-    wc.cbWndExtra = 0;
-    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wc.lpszMenuName = NULL;
-    //wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
-
-    RegisterClass(&wc);
-
-    hwnd = CreateWindowEx(
-        WS_EX_WINDOWEDGE,
-        wc.lpszClassName,
-        L"Kontrola sali",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 958, 820,
-        NULL, NULL, wc.hInstance, NULL);
-
-    if (!hwnd) {
-        return 0;
-    }
-
-    ShowWindow(hwnd, nCmdShow);
-    UpdateWindow(hwnd);
-
-    std::thread serverThread(server, hwnd);
-
-    MSG msg = {};
-
-    while (GetMessage(&msg, NULL, 0, 0) && g_running) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-
-    g_running = false;
-    serverThread.join();
-
-    return 0;
 }

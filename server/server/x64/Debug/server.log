@@ -1,13 +1,11 @@
 ﻿  main.cpp
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(131,37): warning C4244: "argument": konwersja z "WPARAM" do "int", możliwa utrata danych
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(210,34): warning C4838: konwersja z „unsigned __int64” do „LONG” wymaga konwersji zawężającej
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(210,112): warning C4838: konwersja z „unsigned __int64” do „LONG” wymaga konwersji zawężającej
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(210,112): warning C4267: "inicjowanie": konwersja z "size_t" do "LONG", możliwa utrata danych
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(238,26): warning C4838: konwersja z „unsigned __int64” do „LONG” wymaga konwersji zawężającej
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(238,104): warning C4838: konwersja z „unsigned __int64” do „LONG” wymaga konwersji zawężającej
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(238,104): warning C4267: "inicjowanie": konwersja z "size_t" do "LONG", możliwa utrata danych
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(245,19): warning C4312: "typ rzutowania": konwersja z "int" na "HMENU" jest większej wielkości
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(249,19): warning C4312: "typ rzutowania": konwersja z "int" na "HMENU" jest większej wielkości
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(116,12): warning C4101: "ptTmp": lokalna zmienna, do której nie istnieje odwołanie
-C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(117,10): warning C4101: "rc": lokalna zmienna, do której nie istnieje odwołanie
+C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(265,37): warning C4244: "argument": konwersja z "WPARAM" do "int", możliwa utrata danych
+C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(338,34): warning C4838: konwersja z „unsigned __int64” do „LONG” wymaga konwersji zawężającej
+C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(338,112): warning C4838: konwersja z „unsigned __int64” do „LONG” wymaga konwersji zawężającej
+C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(338,112): warning C4267: "inicjowanie": konwersja z "size_t" do "LONG", możliwa utrata danych
+C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(381,26): warning C4838: konwersja z „unsigned __int64” do „LONG” wymaga konwersji zawężającej
+C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(381,104): warning C4838: konwersja z „unsigned __int64” do „LONG” wymaga konwersji zawężającej
+C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(381,104): warning C4267: "inicjowanie": konwersja z "size_t" do "LONG", możliwa utrata danych
+C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(238,12): warning C4101: "ptTmp": lokalna zmienna, do której nie istnieje odwołanie
+C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\main.cpp(239,10): warning C4101: "rc": lokalna zmienna, do której nie istnieje odwołanie
   server.vcxproj -> C:\Users\macie\Desktop\Programowanie\projekty\TeachControl_\server\x64\Debug\server.exe
